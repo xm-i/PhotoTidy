@@ -7,6 +7,7 @@ using PhotoTidy.Models;
 using PhotoTidy.Services;
 using PhotoTidy.ViewModels;
 using PhotoTidy.Views;
+using System.Threading.Tasks;
 
 namespace PhotoTidy {
 	/// <summary>
@@ -52,8 +53,9 @@ namespace PhotoTidy {
 		/// <summary>
 		///     画像アイテムのダブルタップで拡大プレビューウィンドウを開きます。
 		/// </summary>
-		private void ImageItem_DoubleTapped(object sender, DoubleTappedRoutedEventArgs _) {
+		private async void ImageItem_DoubleTapped(object sender, DoubleTappedRoutedEventArgs _) {
 			var previewWindow = Ioc.Default.GetRequiredService<ImagePreviewWindow>();
+			await Task.Delay(100);
 			previewWindow.Activate();
 		}
 
