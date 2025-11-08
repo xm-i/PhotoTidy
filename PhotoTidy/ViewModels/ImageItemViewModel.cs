@@ -14,14 +14,17 @@ public class ImageItemViewModel(ImageItem imageItem) {
 	/// </summary>
 	public BindableReactiveProperty<string> FilePath {
 		get;
-	} = imageItem.FilePath.ToBindableReactiveProperty();
+	} = imageItem.FilePath.ToBindableReactiveProperty("");
 
 	/// <summary>
 	///     パスを除いたファイル名を取得します。
 	/// </summary>
 	public IReadOnlyBindableReactiveProperty<string> FileName {
-		get;
-	} = imageItem.FileName.ToBindableReactiveProperty();
+		get {
+			_ = this.ImageItem.EnsureThumbnailAsync();
+			return field;
+		}
+	} = imageItem.FileName.ToBindableReactiveProperty("");
 
 	/// <summary>
 	///     読み込まれたサムネイルを取得します。読み込み前は null です。

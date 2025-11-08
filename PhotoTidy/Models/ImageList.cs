@@ -125,7 +125,6 @@ public class ImageList {
 			foreach (var file in files) {
 				var item = new ImageItem(file);
 				this.Images.Add(item);
-				_ = item.EnsureThumbnailAsync();
 			}
 
 			this.Status.Value = $"{this.Images.Count} 件";
