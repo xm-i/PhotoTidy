@@ -1,7 +1,9 @@
-using Windows.System;
+using Microsoft.UI.Xaml; // Added for Visibility
+
 using PhotoTidy.Models;
 using PhotoTidy.Services;
-using Microsoft.UI.Xaml; // Added for Visibility
+
+using Windows.System;
 
 namespace PhotoTidy.ViewModels;
 
@@ -33,6 +35,14 @@ public class ImagePreviewViewModel {
 		this.NextImage = imageList.NextImage.Select(x => x == null ? null : new ImageItemViewModel(x)).ToBindableReactiveProperty();
 		this.PreviousImage = imageList.PreviousImage.Select(x => x == null ? null : new ImageItemViewModel(x)).ToBindableReactiveProperty();
 
+		this.Title =
+			this.SelectedImage
+				.ObservePropertyChanged(x => x)
+				.CombineLatest(this.SelectedIndex, (img, idx) => (img, idx))
+				.Select(x => {
+					return $"{x.img.Value?.FileName.Value} ({x.idx + 1} / {this._imageList.Images.Count})";
+				}).ToBindableReactiveProperty(string.Empty);
+
 		// Visibility projections
 		this.NextImageVisibility = imageList.NextImage
 			.Select(x => x == null ? Visibility.Collapsed : Visibility.Visible)
@@ -40,6 +50,10 @@ public class ImagePreviewViewModel {
 		this.PreviousImageVisibility = imageList.PreviousImage
 			.Select(x => x == null ? Visibility.Collapsed : Visibility.Visible)
 			.ToBindableReactiveProperty();
+	}
+
+	public IReadOnlyBindableReactiveProperty<string> Title {
+		get;
 	}
 
 	/// <summary>

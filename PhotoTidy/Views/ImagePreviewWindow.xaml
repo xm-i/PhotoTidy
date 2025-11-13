@@ -6,7 +6,7 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d"
-    Title="{x:Bind ViewModel.SelectedImage.Value.FileName.Value, Mode=OneWay}">
+    Title="{x:Bind ViewModel.Title.Value, Mode=OneWay}">
     <Grid x:Name="RootGrid" Background="Black" KeyDown="RootGrid_KeyDown" IsTabStop="True">
         <Image x:Name="PreviewImage"
                Source="{x:Bind ViewModel.SelectedImage.Value.Thumbnail.Value, Mode=OneWay}"
