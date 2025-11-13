@@ -8,10 +8,8 @@ namespace PhotoTidy.Views;
 /// <summary>
 ///     単一画像の拡大プレビュー用ウィンドウです。
 /// </summary>
-[AddSingleton]
+[AddTransient]
 public sealed partial class ImagePreviewWindow {
-	private readonly MainViewModel _mainViewModel = Ioc.Default.GetRequiredService<MainViewModel>();
-
 	/// <summary>
 	///     <see cref="ImagePreviewWindow" /> の新しいインスタンスを初期化します。
 	/// </summary>
