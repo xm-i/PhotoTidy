@@ -49,23 +49,27 @@ public sealed class ImageItem {
 	} = new();
 
 	/// <summary>
-	///     サムネイルを非同期で読み込みます (一度のみ)。
+	///     サムネイルを非同期で読み込みます。
 	/// </summary>
 	/// <returns>非同期操作を表すタスク。</returns>
 	public async Task EnsureThumbnailAsync() {
 		if (this._loaded) {
 			return;
 		}
-
-		try {
-			var bitmap = new BitmapImage();
-			await using var stream = File.OpenRead(this.FilePath.Value);
-			await bitmap.SetSourceAsync(stream.AsRandomAccessStream());
-			this.Thumbnail.Value = bitmap;
-		} catch {
-			// 失敗は無視 (破損ファイル等)。
-		} finally {
+		var count = 0;
+		while (count < 10) {
+			try {
+				var bitmap = new BitmapImage();
+				await using var stream = File.OpenRead(this.FilePath.Value);
+				await bitmap.SetSourceAsync(stream.AsRandomAccessStream());
+				this.Thumbnail.Value = bitmap;
+			} catch {
+				count++;
+				await Task.Delay(100 * count);
+				continue;
+			}
 			this._loaded = true;
+			break;
 		}
 	}
 }
