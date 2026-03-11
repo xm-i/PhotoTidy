@@ -118,7 +118,7 @@ public class ImageList {
 			this.Status.Value = "読み込み中...";
 			this.Images.Clear();
 
-			var files = Directory.EnumerateFiles(this.FolderPath.Value, "*.*", SearchOption.TopDirectoryOnly)
+			var files = Directory.EnumerateFiles(this.FolderPath.Value, "*.*", SearchOption.AllDirectories)
 				.Where(f => ImageExtensions.Contains(Path.GetExtension(f), StringComparer.OrdinalIgnoreCase))
 				.ToList();
 
