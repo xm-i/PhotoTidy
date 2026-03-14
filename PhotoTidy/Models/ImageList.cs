@@ -237,7 +237,7 @@ public class ImageList {
 	/// <summary>
 	///     指定タグが付与されている全ての画像をそのタグのターゲットフォルダへ移動します。
 	/// </summary>
-	public void MoveImagesByTag() {
+	public async Task MoveImagesByTag() {
 		try {
 			var targets = this.Images.Where(image => image.Tag.Value != null).ToList();
 			if (targets.Count == 0) {
@@ -269,6 +269,8 @@ public class ImageList {
 		} catch (Exception ex) {
 			this.Status.Value = "移動エラー: " + ex.Message;
 		}
+		await Task.Delay(400);
+		this.Load();
 	}
 
 	private string EnsureUnique(string path) {
