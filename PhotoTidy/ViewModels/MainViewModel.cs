@@ -1,5 +1,7 @@
 using System.IO;
+using Windows.System;
 using PhotoTidy.Models;
+using PhotoTidy.Services;
 
 namespace PhotoTidy.ViewModels;
 
@@ -9,13 +11,15 @@ namespace PhotoTidy.ViewModels;
 [AddSingleton]
 public sealed class MainViewModel {
 	private readonly TagList _tagList;
+	private readonly AppStateService _appStateService;
 
 	/// <summary>
 	///     <see cref="MainViewModel" /> クラスの新しいインスタンスを初期化します。
 	/// </summary>
 	/// <param name="imageList">イメージリストモデル</param>
-	public MainViewModel(ImageList imageList, TagList tagList) {
+	public MainViewModel(ImageList imageList, TagList tagList, AppStateService appStateService) {
 		this._tagList = tagList;
+		this._appStateService = appStateService;
 		this.Images = imageList.Images.ToNotifyCollectionChanged(x => new ImageItemViewModel(x));
 		this.FolderPath = imageList.FolderPath.ToBindableReactiveProperty();
 		this.Status = imageList.Status.ToBindableReactiveProperty();
@@ -25,12 +29,20 @@ public sealed class MainViewModel {
 		this.BrowseCommand.Subscribe(async _ => await imageList.BrowseAsync());
 		this.LoadCommand = this.IsBusy.CombineLatest(this.FolderPath, (isBusy, folderPath) => (isBusy, folderPath)).Select(x => !x.isBusy && Directory.Exists(x.folderPath ?? string.Empty)).ToReactiveCommand();
 		this.LoadCommand.Subscribe(_ => imageList.Load());
+		this.FolderPath.Subscribe(x => {
+			imageList.FolderPath.Value = x;
+		});
 		this.SelectedIndex.Subscribe(x => {
 			imageList.SelectedIndex.Value = x;
 		});
 
 		this.Tags = tagList.Tags.ToNotifyCollectionChanged();
 		this.MoveFilesCommand.Subscribe(_ => imageList.MoveImagesByTag());
+
+		this.RestoreState(imageList);
+
+		this.FolderPath.Skip(1).Subscribe(_ => this.SaveState());
+		this.SelectedIndex.Skip(1).Subscribe(_ => this.SaveState());
 	}
 
 	public NotifyCollectionChangedSynchronizedViewList<TagInfo> Tags {
@@ -39,10 +51,12 @@ public sealed class MainViewModel {
 
 	public void AddTag(TagInfo tag) {
 		this._tagList.AddTag(tag);
+		this.SaveState();
 	}
 
 	public void RemoveTag(TagInfo tag) {
 		this._tagList.RemoveTag(tag);
+		this.SaveState();
 	}
 
 	public ReactiveCommand MoveFilesCommand {
@@ -103,5 +117,47 @@ public sealed class MainViewModel {
 	/// </summary>
 	public IReadOnlyBindableReactiveProperty<ImageItemViewModel?> SelectedImage {
 		get;
+	}
+
+	private void RestoreState(ImageList imageList) {
+		var state = this._appStateService.Load();
+		if (state == null) {
+			return;
+		}
+
+		if (!string.IsNullOrWhiteSpace(state.FolderPath.Value)) {
+			this.FolderPath.Value = state.FolderPath.Value;
+		}
+
+		foreach (var tagState in state.Tags) {
+			var tag = new TagInfo();
+			tag.Key.Value = tagState.Key;
+			tag.Name.Value = tagState.Name;
+			tag.TargetFolder.Value = tagState.TargetFolder;
+			this._tagList.AddTag(tag);
+		}
+
+		if (!string.IsNullOrWhiteSpace(this.FolderPath.Value) && Directory.Exists(this.FolderPath.Value)) {
+			imageList.Load();
+			if (state.SelectedIndex.Value >= 0 && state.SelectedIndex.Value < imageList.Images.Count) {
+				this.SelectedIndex.Value = state.SelectedIndex.Value;
+			}
+		}
+	}
+
+	private void SaveState() {
+		var config = new AppStateConfig();
+		config.FolderPath.Value = this.FolderPath.Value;
+		config.SelectedIndex.Value = this.SelectedIndex.Value;
+
+		foreach (var tag in this._tagList.Tags) {
+			config.Tags.Add(new TagStateConfig {
+				Key = tag.Key.Value,
+				Name = tag.Name.Value,
+				TargetFolder = tag.TargetFolder.Value
+			});
+		}
+
+		this._appStateService.Save(config);
 	}
 }

@@ -12,6 +12,8 @@
     <File Path="Directory.Build.props" />
     <File Path="PhotoTidy.sln.DotSettings" />
   </Folder>
+  <Project Path="Library/R3.JsonConfig.Generators/R3.JsonConfig.Generators.csproj" />
+  <Project Path="Library/R3.JsonConfig/R3.JsonConfig.csproj" />
   <Project Path="PhotoTidy/PhotoTidy.csproj">
     <Platform Solution="*|ARM64" Project="ARM64" />
     <Platform Solution="*|x64" Project="x64" />
