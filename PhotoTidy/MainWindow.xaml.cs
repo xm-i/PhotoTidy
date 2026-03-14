@@ -18,17 +18,15 @@ namespace PhotoTidy {
 	[AddSingleton]
 	public sealed partial class MainWindow : Window {
 		private readonly IFolderPickerService _folderPickerService;
-		private readonly TagShortcutService _tagShortcutService;
 
 		/// <summary>
 		///     <see cref="MainWindow" /> クラスの新しいインスタンスを初期化します。
 		/// </summary>
-		public MainWindow(MainViewModel mainViewModel, ImagePreviewViewModel previewViewModel, IFolderPickerService folderPickerService, TagShortcutService tagShortcutService) {
+		public MainWindow(MainViewModel mainViewModel, ImagePreviewViewModel previewViewModel, IFolderPickerService folderPickerService) {
 			this.InitializeComponent();
 			this.ViewModel = mainViewModel;
 			this.PreviewViewModel = previewViewModel;
 			this._folderPickerService = folderPickerService;
-			this._tagShortcutService = tagShortcutService;
 			this.RootGrid.Loaded += (_, _) => this.RootGrid.Focus(FocusState.Programmatic);
 		}
 
@@ -64,13 +62,7 @@ namespace PhotoTidy {
 			}
 
 			var selectedItems = this.ImagesGrid.SelectedItems.OfType<ImageItemViewModel>().ToList();
-			if (selectedItems.Count == 0 && this.ViewModel.SelectedImage.Value != null) {
-				selectedItems.Add(this.ViewModel.SelectedImage.Value);
-			}
-
-			foreach (var selectedItem in selectedItems) {
-				this._tagShortcutService.Apply(e.Key, selectedItem.ImageItem);
-			}
+			this.ViewModel.ApplyShortcutTag(e.Key, selectedItems);
 		}
 
 		/// <summary>

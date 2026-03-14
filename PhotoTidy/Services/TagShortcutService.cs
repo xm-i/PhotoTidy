@@ -23,4 +23,15 @@ public sealed class TagShortcutService(TagList tagList) {
 
 		item.Tag.Value = tag;
 	}
+
+	/// <summary>
+	///     対象画像のタグを削除します。
+	/// </summary>
+	public void Clear(ImageItem? item) {
+		if (item == null) {
+			return;
+		}
+
+		item.Tag.Value = null;
+	}
 }

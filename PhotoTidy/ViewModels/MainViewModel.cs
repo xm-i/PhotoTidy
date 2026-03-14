@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.IO;
 using Windows.System;
 using PhotoTidy.Models;
@@ -12,14 +13,16 @@ namespace PhotoTidy.ViewModels;
 public sealed class MainViewModel {
 	private readonly TagList _tagList;
 	private readonly AppStateService _appStateService;
+	private readonly TagShortcutService _tagShortcutService;
 
 	/// <summary>
 	///     <see cref="MainViewModel" /> クラスの新しいインスタンスを初期化します。
 	/// </summary>
 	/// <param name="imageList">イメージリストモデル</param>
-	public MainViewModel(ImageList imageList, TagList tagList, AppStateService appStateService) {
+	public MainViewModel(ImageList imageList, TagList tagList, AppStateService appStateService, TagShortcutService tagShortcutService) {
 		this._tagList = tagList;
 		this._appStateService = appStateService;
+		this._tagShortcutService = tagShortcutService;
 		this.Images = imageList.Images.ToNotifyCollectionChanged(x => new ImageItemViewModel(x));
 		this.FolderPath = imageList.FolderPath.ToBindableReactiveProperty();
 		this.Status = imageList.Status.ToBindableReactiveProperty();
@@ -62,6 +65,23 @@ public sealed class MainViewModel {
 	public void RemoveTag(TagInfo tag) {
 		this._tagList.RemoveTag(tag);
 		this.SaveState();
+	}
+
+	public void ApplyShortcutTag(VirtualKey key, IReadOnlyList<ImageItemViewModel> selectedItems) {
+		if (selectedItems.Count == 0) {
+			return;
+		}
+
+		if (key is VirtualKey.Delete or VirtualKey.Back) {
+			foreach (var selectedItem in selectedItems) {
+				this._tagShortcutService.Clear(selectedItem.ImageItem);
+			}
+			return;
+		}
+
+		foreach (var selectedItem in selectedItems) {
+			this._tagShortcutService.Apply(key, selectedItem.ImageItem);
+		}
 	}
 
 	public ReactiveCommand MoveFilesCommand {

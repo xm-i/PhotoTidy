@@ -23,6 +23,14 @@ public class ImagePreviewViewModel {
 				case VirtualKey.Left:
 					this._imageList.MovePrevious();
 					return;
+				case VirtualKey.Delete:
+				case VirtualKey.Back:
+					if (this.SelectedImage.Value == null) {
+						return;
+					}
+
+					tagShortcutService.Clear(this.SelectedImage.Value.ImageItem);
+					return;
 				default:
 					if (this.SelectedImage.Value == null) {
 						return;
