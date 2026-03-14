@@ -4,9 +4,17 @@ namespace PhotoTidy.Models;
 public class TagList {
 	public ObservableList<TagInfo> Tags {
 		get;
-	} = [new()];
+	} = [];
 
 	public void AddTagRow() {
 		this.Tags.Add(new());
+	}
+
+	public void AddTag(TagInfo tag) {
+		this.Tags.Add(tag);
+	}
+
+	public void RemoveTag(TagInfo tag) {
+		this.Tags.Remove(tag);
 	}
 }

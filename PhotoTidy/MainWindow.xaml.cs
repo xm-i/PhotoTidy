@@ -1,5 +1,6 @@
 using Windows.System;
 using CommunityToolkit.Mvvm.DependencyInjection;
+using Microsoft.UI.Text;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
@@ -59,39 +60,92 @@ namespace PhotoTidy {
 			previewWindow.Activate();
 		}
 
+		/// <summary>
+		///     タグ定義追加ダイアログを表示します。
+		/// </summary>
+		private async void AddTagDefinition_Click(object sender, RoutedEventArgs e) {
+			VirtualKey? selectedKey = null;
+
+			var keyTextBox = new TextBox {
+				PlaceholderText = "キーを押して割り当て (Delete で解除)",
+				IsReadOnly = true
+			};
+			keyTextBox.KeyDown += (s, args) => {
+				args.Handled = true;
+				if (IsModifier(args.Key)) {
+					return;
+				}
+
+				if (args.Key is VirtualKey.Back or VirtualKey.Delete) {
+					selectedKey = null;
+					keyTextBox.Text = "";
+					return;
+				}
+
+				selectedKey = args.Key;
+				keyTextBox.Text = args.Key.ToString();
+			};
+
+			var nameTextBox = new TextBox { PlaceholderText = "タグ名を入力" };
+
+			var folderTextBox = new TextBox { PlaceholderText = "フォルダを選択", IsReadOnly = true };
+			var browseButton = new Button { Content = "…", MinWidth = 32 };
+			browseButton.Click += async (s, args) => {
+				var folder = await this._folderPickerService.PickFolderAsync();
+				if (!string.IsNullOrEmpty(folder)) {
+					folderTextBox.Text = folder;
+				}
+			};
+
+			var folderPanel = new Grid { ColumnSpacing = 4 };
+			folderPanel.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+			folderPanel.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+			Grid.SetColumn(folderTextBox, 0);
+			Grid.SetColumn(browseButton, 1);
+			folderPanel.Children.Add(folderTextBox);
+			folderPanel.Children.Add(browseButton);
+
+			var content = new StackPanel { Spacing = 16, MinWidth = 400 };
+			content.Children.Add(CreateField("ショートカットキー", keyTextBox));
+			content.Children.Add(CreateField("タグ名", nameTextBox));
+			content.Children.Add(CreateField("ターゲットフォルダ", folderPanel));
+
+			var dialog = new ContentDialog {
+				Title = "タグ定義追加",
+				Content = content,
+				PrimaryButtonText = "追加",
+				CloseButtonText = "キャンセル",
+				DefaultButton = ContentDialogButton.Primary,
+				XamlRoot = this.Content.XamlRoot
+			};
+
+			if (await dialog.ShowAsync() == ContentDialogResult.Primary) {
+				var tag = new TagInfo();
+				tag.Key.Value = selectedKey;
+				tag.Name.Value = string.IsNullOrWhiteSpace(nameTextBox.Text) ? null : nameTextBox.Text;
+				tag.TargetFolder.Value = string.IsNullOrWhiteSpace(folderTextBox.Text) ? null : folderTextBox.Text;
+				this.ViewModel.AddTag(tag);
+			}
+		}
+
+		/// <summary>
+		///     タグ定義を削除します。
+		/// </summary>
+		private void RemoveTag_Click(object sender, RoutedEventArgs e) {
+			if (sender is FrameworkElement { DataContext: TagInfo tag }) {
+				this.ViewModel.RemoveTag(tag);
+			}
+		}
+
+		private static StackPanel CreateField(string label, UIElement input) {
+			var panel = new StackPanel { Spacing = 4 };
+			panel.Children.Add(new TextBlock { Text = label, FontWeight = FontWeights.SemiBold });
+			panel.Children.Add(input);
+			return panel;
+		}
+
 		private static bool IsModifier(VirtualKey key) {
 			return key is VirtualKey.Shift or VirtualKey.Control or VirtualKey.Menu or VirtualKey.LeftWindows or VirtualKey.RightWindows;
-		}
-
-		private void TagKeyTextBox_KeyDown(object sender, KeyRoutedEventArgs e) {
-			if (sender is not TextBox tb || tb.DataContext is not TagInfo tag) {
-				return;
-			}
-
-			// ここでキーイベントを消費 (二重入力防止)
-			e.Handled = true;
-
-			if (IsModifier(e.Key)) {
-				return;
-			}
-
-			if (e.Key is VirtualKey.Back or VirtualKey.Delete) {
-				tag.Key.Value = null;
-				return;
-			}
-
-			tag.Key.Value = e.Key;
-		}
-
-		private async void TargetFolderBrowseButton_Click(object sender, RoutedEventArgs e) {
-			if (sender is not Button btn || btn.DataContext is not TagInfo tag) {
-				return;
-			}
-
-			var folder = await this._folderPickerService.PickFolderAsync();
-			if (!string.IsNullOrEmpty(folder)) {
-				tag.TargetFolder.Value = folder;
-			}
 		}
 	}
 }

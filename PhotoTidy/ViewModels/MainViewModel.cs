@@ -8,11 +8,14 @@ namespace PhotoTidy.ViewModels;
 /// </summary>
 [AddSingleton]
 public sealed class MainViewModel {
+	private readonly TagList _tagList;
+
 	/// <summary>
 	///     <see cref="MainViewModel" /> クラスの新しいインスタンスを初期化します。
 	/// </summary>
 	/// <param name="imageList">イメージリストモデル</param>
 	public MainViewModel(ImageList imageList, TagList tagList) {
+		this._tagList = tagList;
 		this.Images = imageList.Images.ToNotifyCollectionChanged(x => new ImageItemViewModel(x));
 		this.FolderPath = imageList.FolderPath.ToBindableReactiveProperty();
 		this.Status = imageList.Status.ToBindableReactiveProperty();
@@ -27,7 +30,6 @@ public sealed class MainViewModel {
 		});
 
 		this.Tags = tagList.Tags.ToNotifyCollectionChanged();
-		this.AddTagDefinitionCommand.Subscribe(_ => tagList.AddTagRow());
 		this.MoveFilesCommand.Subscribe(_ => imageList.MoveImagesByTag());
 	}
 
@@ -35,9 +37,13 @@ public sealed class MainViewModel {
 		get;
 	}
 
-	public ReactiveCommand AddTagDefinitionCommand {
-		get;
-	} = new();
+	public void AddTag(TagInfo tag) {
+		this._tagList.AddTag(tag);
+	}
+
+	public void RemoveTag(TagInfo tag) {
+		this._tagList.RemoveTag(tag);
+	}
 
 	public ReactiveCommand MoveFilesCommand {
 		get;

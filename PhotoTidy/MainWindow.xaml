@@ -7,6 +7,7 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:vm="using:PhotoTidy.ViewModels"
     xmlns:models="using:PhotoTidy.Models"
+    xmlns:conv="using:PhotoTidy.Converters"
     mc:Ignorable="d"
     Title="PhotoTidy">
 
@@ -15,48 +16,80 @@
     </Window.SystemBackdrop>
 
     <Grid x:Name="RootGrid" RowSpacing="8" ColumnSpacing="8" Padding="12">
+        <Grid.Resources>
+            <conv:NullToVisibilityConverter x:Key="NullToVisibilityConverter" />
+        </Grid.Resources>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
-        <!-- Folder input area -->
-        <StackPanel Orientation="Horizontal" Spacing="8">
-            <TextBox x:Name="FolderTextBox" Width="500" Text="{x:Bind ViewModel.FolderPath.Value, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" PlaceholderText="フォルダパスを入力 (Enter で読み込み)" KeyDown="FolderTextBox_KeyDown"/>
-            <Button Content="参照" Command="{x:Bind ViewModel.BrowseCommand}"/>
-            <Button Content="読み込み" Command="{x:Bind ViewModel.LoadCommand}"/>
-            <TextBlock Margin="12,0,0,0" VerticalAlignment="Center" Foreground="Gray" Text="{x:Bind ViewModel.Status.Value}"/>
-        </StackPanel>
+		<!-- Folder input area -->
+		<Grid>
+			<Grid.ColumnDefinitions>
+				<ColumnDefinition Width="Auto"/>
+				<ColumnDefinition Width="Auto"/>
+				<ColumnDefinition Width="Auto"/>
+				<ColumnDefinition Width="*"/>
+				<ColumnDefinition Width="Auto"/>
+			</Grid.ColumnDefinitions>
+			<TextBox Grid.Column="0" x:Name="FolderTextBox" Width="500" Text="{x:Bind ViewModel.FolderPath.Value, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" PlaceholderText="フォルダパスを入力 (Enter で読み込み)" KeyDown="FolderTextBox_KeyDown"/>
+			<Button Grid.Column="1" Content="参照" Command="{x:Bind ViewModel.BrowseCommand}"/>
+			<Button Grid.Column="2" Content="読み込み" Command="{x:Bind ViewModel.LoadCommand}"/>
+			<TextBlock Grid.Column="3" Margin="12,0,0,0" VerticalAlignment="Center" Foreground="Gray" Text="{x:Bind ViewModel.Status.Value}"/>
+			<Button Grid.Column="4" Content="移動" Width="72" Command="{x:Bind ViewModel.MoveFilesCommand}" />
+		</Grid>
 
-        <Expander Grid.Row="1" HorizontalAlignment="Stretch">
-            <Expander.Header>
-                <TextBlock Text="タグ定義 (ショートカット用候補)" FontWeight="SemiBold" />
-            </Expander.Header>
-            <StackPanel Spacing="8" Padding="4">
-				<StackPanel Orientation="Horizontal">
-		            <Button Content="行を追加" HorizontalAlignment="Left" Command="{x:Bind ViewModel.AddTagDefinitionCommand}" />
-					<Button Content="移動" Width="72" Command="{x:Bind ViewModel.MoveFilesCommand}" />
-				</StackPanel>
+		<!-- Tag definitions -->
+		<ScrollViewer Grid.Row="1" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
+			<StackPanel Orientation="Horizontal" Spacing="6">
 				<ItemsControl ItemsSource="{x:Bind ViewModel.Tags}">
-                    <ItemsControl.ItemTemplate>
-                        <DataTemplate x:DataType="models:TagInfo">
-                            <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
-                                <!-- Key capture textbox: press key to assign, Delete/Backspace to clear -->
-                                <TextBox Width="140"
-                                         PlaceholderText="キー"
-                                         IsReadOnly="True"
-                                         Text="{x:Bind Key.Value, Mode=OneWay}"
-                                         KeyDown="TagKeyTextBox_KeyDown"/>
-                                <TextBox Width="160" PlaceholderText="タグ名" Text="{x:Bind Name.Value, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
-                                <TextBox Width="260" IsReadOnly="True" PlaceholderText="ターゲットフォルダ" Text="{x:Bind TargetFolder.Value, Mode=OneWay}"/>
-								<Button Content="…" Width="32" Click="TargetFolderBrowseButton_Click" />
-							</StackPanel>
-                        </DataTemplate>
-                    </ItemsControl.ItemTemplate>
-                </ItemsControl>
-            </StackPanel>
-        </Expander>
+					<ItemsControl.ItemsPanel>
+						<ItemsPanelTemplate>
+							<StackPanel Orientation="Horizontal" Spacing="6"/>
+						</ItemsPanelTemplate>
+					</ItemsControl.ItemsPanel>
+					<ItemsControl.ItemTemplate>
+						<DataTemplate x:DataType="models:TagInfo">
+							<Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+									CornerRadius="6" Padding="10,6" VerticalAlignment="Center">
+								<StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+									<Border Background="{ThemeResource AccentFillColorDefaultBrush}"
+											CornerRadius="4" Padding="6,2" MinWidth="28"
+											VerticalAlignment="Center"
+											Visibility="{Binding Key.Value, Converter={StaticResource NullToVisibilityConverter}}">
+										<TextBlock Text="{x:Bind Key.Value, Mode=OneWay}"
+												   Foreground="White" FontWeight="Bold" FontSize="12"
+												   HorizontalAlignment="Center"/>
+									</Border>
+									<StackPanel Spacing="0" VerticalAlignment="Center">
+										<TextBlock Text="{x:Bind Name.Value, Mode=OneWay}"
+												   FontWeight="SemiBold" VerticalAlignment="Center" FontSize="13"/>
+										<TextBlock Text="{x:Bind TargetFolder.Value, Mode=OneWay}"
+												   Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+												   FontSize="11" MaxWidth="220" TextTrimming="CharacterEllipsis"
+												   Visibility="{Binding TargetFolder.Value, Converter={StaticResource NullToVisibilityConverter}}"/>
+									</StackPanel>
+									<Button Click="RemoveTag_Click"
+											Background="Transparent" Padding="4,2"
+											VerticalAlignment="Center" MinWidth="0" MinHeight="0">
+										<FontIcon Glyph="&#xE711;" FontSize="10"/>
+									</Button>
+								</StackPanel>
+							</Border>
+						</DataTemplate>
+					</ItemsControl.ItemTemplate>
+				</ItemsControl>
+				<Button Click="AddTagDefinition_Click" VerticalAlignment="Center"
+						Padding="8,6" CornerRadius="6">
+					<StackPanel Orientation="Horizontal" Spacing="4">
+						<FontIcon Glyph="&#xE710;" FontSize="12"/>
+						<TextBlock Text="追加" FontSize="12"/>
+					</StackPanel>
+				</Button>
+			</StackPanel>
+		</ScrollViewer>
 
         <GridView
             x:Name="ImagesGrid"
