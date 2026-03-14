@@ -15,7 +15,7 @@
         <MicaBackdrop />
     </Window.SystemBackdrop>
 
-    <Grid x:Name="RootGrid" RowSpacing="8" ColumnSpacing="8" Padding="12">
+    <Grid x:Name="RootGrid" RowSpacing="8" ColumnSpacing="8" Padding="12" KeyDown="RootGrid_KeyDown">
         <Grid.Resources>
             <conv:NullToVisibilityConverter x:Key="NullToVisibilityConverter" />
         </Grid.Resources>
@@ -99,7 +99,7 @@
             x:Name="ImagesGrid"
             Grid.Row="2"
             IsItemClickEnabled="True"
-            SelectionMode="Single"
+            SelectionMode="Extended"
             ItemsSource="{x:Bind ViewModel.Images}"
             SelectedIndex="{x:Bind ViewModel.SelectedIndex.Value, Mode=TwoWay}">
             <GridView.ItemsPanel>
