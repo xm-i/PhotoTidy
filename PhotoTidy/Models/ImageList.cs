@@ -97,6 +97,13 @@ public class ImageList {
 		get;
 	}
 
+	/// <summary>
+	///     サブディレクトリを含めて読み込むかどうか。
+	/// </summary>
+	public ReactiveProperty<bool> IncludeSubdirectories {
+		get;
+	} = new(true);
+
 	public async Task BrowseAsync() {
 		var path = await this._folderPickerService.PickFolderAsync();
 		if (!string.IsNullOrEmpty(path)) {
@@ -118,7 +125,8 @@ public class ImageList {
 			this.Status.Value = "読み込み中...";
 			this.Images.Clear();
 
-			var files = Directory.EnumerateFiles(this.FolderPath.Value, "*.*", SearchOption.AllDirectories)
+			var searchOption = this.IncludeSubdirectories.Value ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly;
+			var files = Directory.EnumerateFiles(this.FolderPath.Value, "*.*", searchOption)
 				.Where(f => ImageExtensions.Contains(Path.GetExtension(f), StringComparer.OrdinalIgnoreCase))
 				.ToList();
 
@@ -139,7 +147,11 @@ public class ImageList {
 
 	private void SetupWatcher() {
 		try {
-			this._watcher = new(this.FolderPath.Value!) { IncludeSubdirectories = false, Filter = "*.*", NotifyFilter = NotifyFilters.FileName | NotifyFilters.CreationTime };
+			this._watcher = new(this.FolderPath.Value!) {
+				IncludeSubdirectories = this.IncludeSubdirectories.Value,
+				Filter = "*.*",
+				NotifyFilter = NotifyFilters.FileName | NotifyFilters.CreationTime
+			};
 			this._watcher.Created += this.OnFileCreated;
 			this._watcher.Renamed += this.OnFileCreated; // .tmp -> 画像拡張子 対応 (追加のみ)
 			this._watcher.EnableRaisingEvents = true;

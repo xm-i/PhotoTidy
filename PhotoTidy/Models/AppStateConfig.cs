@@ -10,6 +10,10 @@ public partial class AppStateConfig {
         get;
     } = new();
 
+    public ReactiveProperty<bool> IncludeSubdirectories {
+        get;
+    } = new(true);
+
     public ReactiveProperty<int> SelectedIndex {
         get;
     } = new(-1);

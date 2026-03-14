@@ -24,6 +24,7 @@ public sealed class MainViewModel {
 		this.FolderPath = imageList.FolderPath.ToBindableReactiveProperty();
 		this.Status = imageList.Status.ToBindableReactiveProperty();
 		this.IsBusy = imageList.IsBusy.ToBindableReactiveProperty();
+		this.IncludeSubdirectories = imageList.IncludeSubdirectories.ToBindableReactiveProperty();
 		this.SelectedIndex = imageList.SelectedIndex.ToBindableReactiveProperty();
 		this.SelectedImage = imageList.SelectedImage.Select(i => i != null ? new ImageItemViewModel(i) : null).ToReadOnlyBindableReactiveProperty();
 		this.BrowseCommand.Subscribe(async _ => await imageList.BrowseAsync());
@@ -31,6 +32,9 @@ public sealed class MainViewModel {
 		this.LoadCommand.Subscribe(_ => imageList.Load());
 		this.FolderPath.Subscribe(x => {
 			imageList.FolderPath.Value = x;
+		});
+		this.IncludeSubdirectories.Subscribe(x => {
+			imageList.IncludeSubdirectories.Value = x;
 		});
 		this.SelectedIndex.Subscribe(x => {
 			imageList.SelectedIndex.Value = x;
@@ -42,6 +46,7 @@ public sealed class MainViewModel {
 		this.RestoreState(imageList);
 
 		this.FolderPath.Skip(1).Subscribe(_ => this.SaveState());
+		this.IncludeSubdirectories.Skip(1).Subscribe(_ => this.SaveState());
 		this.SelectedIndex.Skip(1).Subscribe(_ => this.SaveState());
 	}
 
@@ -119,6 +124,13 @@ public sealed class MainViewModel {
 		get;
 	}
 
+	/// <summary>
+	///     サブディレクトリを読み込み対象に含めるかどうか。
+	/// </summary>
+	public BindableReactiveProperty<bool> IncludeSubdirectories {
+		get;
+	}
+
 	private void RestoreState(ImageList imageList) {
 		var state = this._appStateService.Load();
 		if (state == null) {
@@ -128,6 +140,7 @@ public sealed class MainViewModel {
 		if (!string.IsNullOrWhiteSpace(state.FolderPath.Value)) {
 			this.FolderPath.Value = state.FolderPath.Value;
 		}
+		this.IncludeSubdirectories.Value = state.IncludeSubdirectories.Value;
 
 		foreach (var tagState in state.Tags) {
 			var tag = new TagInfo();
@@ -148,6 +161,7 @@ public sealed class MainViewModel {
 	private void SaveState() {
 		var config = new AppStateConfig();
 		config.FolderPath.Value = this.FolderPath.Value;
+		config.IncludeSubdirectories.Value = this.IncludeSubdirectories.Value;
 		config.SelectedIndex.Value = this.SelectedIndex.Value;
 
 		foreach (var tag in this._tagList.Tags) {

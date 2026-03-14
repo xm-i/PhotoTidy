@@ -31,14 +31,18 @@
 				<ColumnDefinition Width="Auto"/>
 				<ColumnDefinition Width="Auto"/>
 				<ColumnDefinition Width="Auto"/>
+				<ColumnDefinition Width="Auto"/>
 				<ColumnDefinition Width="*"/>
 				<ColumnDefinition Width="Auto"/>
 			</Grid.ColumnDefinitions>
 			<TextBox Grid.Column="0" x:Name="FolderTextBox" Width="500" Text="{x:Bind ViewModel.FolderPath.Value, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" PlaceholderText="フォルダパスを入力 (Enter で読み込み)" KeyDown="FolderTextBox_KeyDown"/>
 			<Button Grid.Column="1" Content="参照" Command="{x:Bind ViewModel.BrowseCommand}"/>
 			<Button Grid.Column="2" Content="読み込み" Command="{x:Bind ViewModel.LoadCommand}"/>
-			<TextBlock Grid.Column="3" Margin="12,0,0,0" VerticalAlignment="Center" Foreground="Gray" Text="{x:Bind ViewModel.Status.Value}"/>
-			<Button Grid.Column="4" Content="移動" Width="72" Command="{x:Bind ViewModel.MoveFilesCommand}" />
+			<CheckBox Grid.Column="3" Content="サブディレクトリを含む"
+					  Margin="12,0,0,0" VerticalAlignment="Center"
+					  IsChecked="{x:Bind ViewModel.IncludeSubdirectories.Value, Mode=TwoWay}"/>
+			<TextBlock Grid.Column="4" Margin="12,0,0,0" VerticalAlignment="Center" Foreground="Gray" Text="{x:Bind ViewModel.Status.Value}"/>
+			<Button Grid.Column="5" Content="移動" Width="72" Command="{x:Bind ViewModel.MoveFilesCommand}" />
 		</Grid>
 
 		<!-- Tag definitions -->
